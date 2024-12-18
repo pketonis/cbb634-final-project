@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Happiness Report</title>
+    <style>
+        .flag {
+            width: 200px;
+            height: auto;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .stats-table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .stats-table, .stats-table th, .stats-table td {
+            border: 2px solid black;
+        }
+        .stats-table th, .stats-table td {
+            padding: 14px;
+            text-align: left;
+        }
+        #countryName {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+        }
+        #interactiveMap {
+            margin-top: 20px;
+            width: 100%;
+            height: 600px;
+        }
+        .center {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>World Happiness Report</h1>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/overall-trends"><button style="margin: 5px; padding: 10px 20px;">Overall Trends</button></a>
+        <a href="/knn-analysis"><button style="margin: 5px; padding: 10px 20px;">KNN Analysis</button></a>
+        <a href="/kmeans-clustering"><button style="margin: 5px; padding: 10px 20px;">K-Means Clustering</button></a>
+    </div>
+
+    <p>Enter a country name to get its statistics:</p>
+    <input type="text" id="countryInput" placeholder="Enter country name">
+    <button onclick="fetchCountryData()">Get Statistics</button>
+
+    <div id="countryName"></div>
+    <div id="countryData">
+        <img id="countryFlag" class="flag" alt="Country Flag" style="display:none;">
+        
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Value</th>
+                    <th>Percentile</th>
+                </tr>
+            </thead>
+            <tbody id="countryStats"></tbody>
+        </table>
+    </div>
+
+    <div id="interactiveMap"></div>
+    </p>Data Source: World Happiness Report 2019 <a href="https://www.kaggle.com/datasets/unsdsn/world-happiness/data">Kaggle Link</a>
+    </p>License: CC0: Public Domain, Free for commercial use<p>
+    </p>Flag Images: <a href="https://www.countryflags.io/">Country Flags</a>   
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        async function loadInteractiveMap() {
+            try {
+                const response = await fetch('/interactive-map');
+                const mapData = await response.json();
+
+                const mapElement = document.getElementById('interactiveMap');
+                Plotly.newPlot(mapElement, mapData.data, mapData.layout);
+
+                mapElement.on('plotly_click', async function(eventData) {
+                    const clickedCountry = eventData.points[0].location;
+                    if (clickedCountry) {
+                        await fetchCountryData(clickedCountry);
+                    }
+                });
+            } catch (error) {
+                console.error("Error loading interactive map:", error);
+                alert("Failed to load the map. Please try again.");
+            }
+        }
+
+        function getColorByPercentile(percentile) {
+            const red = Math.round((100 - percentile) * 2.55);
+            const green = Math.round(percentile * 2.55);
+            return `rgb(${red}, ${green}, 0)`;
+        }
+
+
+        async function fetchCountryData(country = null) {
+            if (!country) {
+                country = document.getElementById("countryInput").value;
+            }
+            const response = await fetch(`/country?country=${country}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            document.getElementById("countryName").innerText = `Statistics for ${data.Country}`;
+            
+            const flagImg = document.getElementById("countryFlag");
+            if (data.Flag) {
+                flagImg.src = data.Flag;
+                flagImg.style.display = "block";
+                flagImg.alt = `${data.Country} Flag`;
+            } else {
+                flagImg.style.display = "none"; 
+            }
+
+            const statsTable = document.getElementById("countryStats");
+            statsTable.innerHTML = `
+                <tr><td>Overall Rank</td><td>${data['Overall Rank']}</td><td>-</td></tr>
+                <tr><td>Score</td><td>${data.Score.value}</td><td style="background-color: ${getColorByPercentile(data.Score.percentile)}">${data.Score.percentile}%</td></tr>
+                <tr><td>GDP per capita</td><td>${data['GDP per capita'].value}</td><td style="background-color: ${getColorByPercentile(data['GDP per capita'].percentile)}">${data['GDP per capita'].percentile}%</td></tr>
+                <tr><td>Social support</td><td>${data['Social support'].value}</td><td style="background-color: ${getColorByPercentile(data['Social support'].percentile)}">${data['Social support'].percentile}%</td></tr>
+                <tr><td>Healthy life expectancy</td><td>${data['Healthy life expectancy'].value}</td><td style="background-color: ${getColorByPercentile(data['Healthy life expectancy'].percentile)}">${data['Healthy life expectancy'].percentile}%</td></tr>
+                <tr><td>Freedom to make life choices</td><td>${data['Freedom to make life choices'].value}</td><td style="background-color: ${getColorByPercentile(data['Freedom to make life choices'].percentile)}">${data['Freedom to make life choices'].percentile}%</td></tr>
+                <tr><td>Generosity</td><td>${data.Generosity.value}</td><td style="background-color: ${getColorByPercentile(data.Generosity.percentile)}">${data.Generosity.percentile}%</td></tr>
+                <tr><td>Perceptions of corruption</td><td>${data['Perceptions of corruption'].value}</td><td style="background-color: ${getColorByPercentile(data['Perceptions of corruption'].percentile)}">${data['Perceptions of corruption'].percentile}%</td></tr>
+            `;
+        }
+
+        loadInteractiveMap();
+    </script>
+</body>
+</html>
