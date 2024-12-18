@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNN Analysis</title>
+    <style>
+        h1, h2 {
+            text-align: center;
+        }
+        .center {
+            text-align: center;
+            margin-top: 20px;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 60%;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .back-button {
+            margin: 20px auto;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>KNN Analysis</h1>
+
+    <form class="center" action="/knn-analysis" method="get">
+        <label for="country">Country Name:</label>
+        <input type="text" id="country" name="country" value="{{ country if country else '' }}" placeholder="Enter a country name">
+        <label for="k">Number of Neighbors (k):</label>
+        <input type="number" id="k" name="k" value="{{ k if k else 5 }}" min="1">
+        <button type="submit">Analyze</button>
+    </form>
+
+    {% if error %}
+    <p class="center" style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    {% if neighbors %}
+    <h2>Analysis for {{ country }}</h2>
+    <p class="center">Predicted Happiness Score: <strong>{{ predicted_score }}</strong></p>
+    <p class="center">Actual Happiness Score: <strong>{{ actual_score }}</strong></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{{ k }} Nearest Neighbors</th>
+                <th>Happiness Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for neighbor in neighbors %}
+            <tr>
+                <td>{{ neighbor.name }}</td>
+                <td>{{ neighbor.score }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="back-button">
+        <a href="/"><button>Back to Main Page</button></a>
+    </div>
+</body>
+</html>

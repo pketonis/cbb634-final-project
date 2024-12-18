@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overall Trends</title>
+    <style>
+        table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: white;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Correlation of Categories with Overall Rank</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Correlation Coefficient</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, correlation in correlations.items() %}
+            <tr>
+                <td>{{ category }}</td>
+                <td>{{ "%.2f"|format(correlation) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <label for="categorySelect">Choose a category to plot:</label>
+        <select id="categorySelect">
+            <option value="GDP per capita">GDP per capita</option>
+            <option value="Social support">Social support</option>
+            <option value="Healthy life expectancy">Healthy life expectancy</option>
+            <option value="Freedom to make life choices">Freedom to make life choices</option>
+            <option value="Generosity">Generosity</option>
+            <option value="Perceptions of corruption">Perceptions of corruption</option>
+        </select>
+        <button onclick="loadScatterplot()">View Scatterplot</button>
+    </div>
+    
+    <div id="scatterplot" style="margin-top: 20px;"></div>
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        async function loadScatterplot() {
+            const category = document.getElementById("categorySelect").value;
+            const response = await fetch(`/scatterplot?category=${category}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert(errorData.error);
+                return;
+            }
+    
+            const plotData = await response.json();
+            const scatterplotDiv = document.getElementById("scatterplot");
+            Plotly.newPlot(scatterplotDiv, plotData.data, plotData.layout);
+        }
+    </script>
+
+    <div style="text-align: center;">
+        <a href="/"><button>Back to Main Page</button></a>    
+    </div>
+</body>
+</html>
